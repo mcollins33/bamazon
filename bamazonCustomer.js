@@ -54,6 +54,7 @@ function customerOrder() {
 
                 if (parseInt(answer.orderQuantity) < chosenItem.stock_quantity) {
                     var newQuantity = chosenItem.stock_quantity - parseInt(answer.orderQuantity);
+                    var purchaseAmount = chosenItem.price * parseInt(answer.orderQuantity);
                     connection.query(
                         "UPDATE products SET ? WHERE ?", [{
                                 stock_quantity: newQuantity
@@ -64,13 +65,14 @@ function customerOrder() {
                         ],
                         function(error) {
                             if (error) throw err;
-                            console.log("Your order has been placed");
+                            console.log("\nYour order has been placed");
+                            console.log("Amount of purchase $"+purchaseAmount+"\n")
                             customerOrder();
                         }
                     );
                 } else {
                     // bid wasn't high enough, so apologize and start over
-                    console.log("Insufficient quantity!");
+                    console.log("\nInsufficient quantity!\n");
                     customerOrder();
                 }
             });
