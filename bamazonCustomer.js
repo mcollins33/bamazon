@@ -11,8 +11,19 @@ var connection = mysql.createConnection({
 
 connection.connect(function(err) {
     if (err) throw err;
-    customerOrder();
+    welcome();
 });
+
+var customerAnswer;
+var chosenItem = [];
+var numberPurchased = [];
+var complete;
+var i;
+
+function welcome(){
+    console.log("Welcome to Bamazon\n");
+    customerOrder();
+}
 
 function customerOrder() {
     connection.query("SELECT * FROM products", function(err, results) {
@@ -44,37 +55,87 @@ function customerOrder() {
                 }
             ])
             .then(function(answer) {
-                var chosenItem;
-                var quantityOrdered = answer.orderQuantity;
-                for (var i = 0; i < results.length; i++) {
-                    if (results[i].product_name === answer.purchaseItems) {
-                        chosenItem = results[i];
-                    }
-                }
-
-                if (parseInt(answer.orderQuantity) < chosenItem.stock_quantity) {
-                    var newQuantity = chosenItem.stock_quantity - parseInt(answer.orderQuantity);
-                    var purchaseAmount = chosenItem.price * parseInt(answer.orderQuantity);
-                    connection.query(
-                        "UPDATE products SET ? WHERE ?", [{
-                                stock_quantity: newQuantity
-                            },
-                            {
-                                item_id: chosenItem.item_id
-                            }
-                        ],
-                        function(error) {
-                            if (error) throw err;
-                            console.log("\nYour order has been placed");
-                            console.log("Amount of purchase $"+purchaseAmount+"\n")
-                            customerOrder();
-                        }
-                    );
-                } else {
-                    // bid wasn't high enough, so apologize and start over
-                    console.log("\nInsufficient quantity!\n");
-                    customerOrder();
-                }
+                customerAnswer = answer;
+                updateArray();
             });
+
+        function updateArray() {
+
+            for (i = 0; i < results.length; i++) {
+                if (results[i].product_name === customerAnswer.purchaseItems) {
+                    updateStock();
+                }
+            }
+        }
+
+        function updateStock() {
+
+            if (parseInt(customerAnswer.orderQuantity) <= results[i].stock_quantity) {
+                chosenItem.push(results[i]);
+                numberPurchased.push(customerAnswer.orderQuantity);
+                var newQuantity = results[i].stock_quantity - parseInt(customerAnswer.orderQuantity);
+
+                connection.query(
+                    "UPDATE products SET ? WHERE ?", [{
+                            stock_quantity: newQuantity
+                        },
+                        {
+                            item_id: results[i].item_id
+                        }
+                    ],
+                    function(error) {
+                        if (error) throw err;
+                    }
+                );
+                console.log("\nItem has been added\n")
+                anotherItem();
+            } else {
+                // bid wasn't high enough, so apologize and start over
+                console.log("\nInsufficient quantity!\n");
+                anotherItem();
+            }
+        }
+
+        function anotherItem() {
+            inquirer
+                .prompt([{
+
+                    name: "purchaseComplete",
+                    type: "confirm",
+                    message: "Would you like to purchase another item?",
+                }])
+                .then(function(answer) {
+                    complete = answer;
+                    addItems();
+                });
+        }
+
+        function addItems() {
+            if (complete.purchaseComplete) {
+                customerAnswer;
+                customerOrder();
+            } else {
+                var purchaseAmount = 0;
+                console.log("\nYour order has been placed");
+                for (var i = 0; i < chosenItem.length; i++) {
+                    console.log("Item: " + chosenItem[i].product_name + "  Qty: " + numberPurchased[i] + "  Price: $" + chosenItem[i].price + "  Total: $" + parseInt(numberPurchased[i]) * chosenItem[i].price);
+                    purchaseAmount += chosenItem[i].price * parseInt(numberPurchased[i]);
+                }
+                console.log("-----------------------------------------------------------------")
+                console.log("Total amount of purchase $" + purchaseAmount.toFixed(2) + "\n")
+                chosenItem;
+                reset();
+
+            }
+        }
+
+        function reset() {
+            var customerAnswer;
+            var chosenItem = [];
+            var numberPurchased = [];
+            var complete;
+            var i;
+            welcome();
+        }
     })
 }
