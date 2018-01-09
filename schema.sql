@@ -38,4 +38,4 @@ VALUES ("Kenmore Electric Dryer", "Appliances", 799.99, 1);
 INSERT INTO products (product_name, department_name, price, stock_quantity)
 VALUES ("Sharper Image Portable Ice Maker", "Appliances", 199.99, 0);
 
-SELECT * FROM products;
+SELECT * FROM products
