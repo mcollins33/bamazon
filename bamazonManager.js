@@ -83,14 +83,11 @@ function addToInventory() {
                 }
             ])
             .then(function(answer) {
-                console.log(answer);
                 var product;
 
-                console.log(newQuantity);
                 for (var i = 0; i < results.length; i++) {
                     if (results[i].product_name === answer.products) {
                         product = results[i];
-                        console.log(product);
                     }
                 }
                 var newQuantity = parseInt(product.stock_quantity) + parseInt(answer.quantityToAdd);
